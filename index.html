@@ -744,7 +744,7 @@
             }
             
             let notificationData = {
-                app_id: "YOUR_ONESIGNAL_APP_ID", // Ensure this matches your App ID
+                app_id: "9e44d838-af43-46a3-a46b-c95371f777e2", // Ensure this matches your App ID
                 headings: { 'en': title },
                 contents: { 'en': message },
                 url: "https://faizansabir7.github.io/IphoneTracker/" // Updated to match subdirectory
@@ -817,7 +817,7 @@
             
             OneSignal.push(function() {
                 OneSignal.createNotification({
-                    app_id: "YOUR_ONESIGNAL_APP_ID", // Ensure this matches your App ID
+                    app_id: "9e44d838-af43-46a3-a46b-c95371f777e2", // Ensure this matches your App ID
                     headings: { 'en': 'Test Notification' },
                     contents: { 'en': 'This is a test notification to verify push notifications are working.' },
                     url: "https://faizansabir7.github.io/IphoneTracker/" // Updated to match subdirectory
@@ -926,7 +926,7 @@
             if (isOneSignalReady) {
                 OneSignal.push(function() {
                     OneSignal.createNotification({
-                        app_id: "YOUR_ONESIGNAL_APP_ID", // Ensure this matches your App ID
+                        app_id: "9e44d838-af43-46a3-a46b-c95371f777e2", // Ensure this matches your App ID
                         headings: { 'en': 'User Check-in' },
                         contents: { 'en': `${userName} has checked in to ${phoneNumber}.` },
                         url: "https://faizansabir7.github.io/IphoneTracker/", // Updated to match subdirectory
@@ -970,7 +970,7 @@
             if (isOneSignalReady) {
                 OneSignal.push(function() {
                     OneSignal.createNotification({
-                        app_id: "YOUR_ONESIGNAL_APP_ID", // Ensure this matches your App ID
+                        app_id: "9e44d838-af43-46a3-a46b-c95371f777e2", // Ensure this matches your App ID
                         headings: { 'en': 'User Check-out' },
                         contents: { 'en': `${userName} has checked out from ${phoneNumber}.` },
                         url: "https://faizansabir7.github.io/IphoneTracker/", // Updated to match subdirectory
