@@ -5,47 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>iPhone User Tracker</title>
     
-    <!-- Reference manifest.json for PWA support -->
-    <link rel="manifest" href="/manifest.json">
-    
     <!-- OneSignal SDK -->
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        OneSignalDeferred.push(function(OneSignal) {
-            OneSignal.init({
-                appId: "9e44d838-af43-46a3-a46b-c95371f777e2", // Replace with your OneSignal App ID
-                safari_web_id: "web.onesignal.auto.YOUR_SAFARI_WEB_ID", // Replace with your Safari Web ID
-                notifyButton: {
-                    enable: true,
-                },
-                allowLocalhostAsSecureOrigin: true,
-                welcomeNotification: {
-                    title: "Welcome to iPhone Tracker",
-                    message: "Thanks for subscribing! You'll receive notifications to check in.",
-                    url: `${window.location.href}#user-section`
-                },
-                promptOptions: {
-                    slidedown: {
-                        prompts: [
-                            {
-                                type: "push",
-                                autoPrompt: false,
-                                text: {
-                                    actionMessage: "Want to receive notifications to check in with your iPhone?",
-                                    acceptButton: "Allow",
-                                    cancelButton: "No Thanks"
-                                },
-                                delay: {
-                                    pageViews: 1,
-                                    timeDelay: 20
-                                }
-                            }
-                        ]
-                    }
-                }
-            });
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+        appId: "9e44d838-af43-46a3-a46b-c95371f777e2",
+        safari_web_id: "web.onesignal.auto.1881b8be-1ae3-4d80-a99d-32f491a07c07",
+        notifyButton: {
+            enable: true,
+        },
         });
+    });
     </script>
     
     <style>
@@ -409,17 +381,9 @@
             <div class="setup-section">
                 <h3>🚀 Quick Setup Guide</h3>
                 <div class="setup-steps">
-                    <p><strong>Before using this app, you need to setup OneSignal:</strong></p>
-                    <ol>
-                        <li>Go to <strong>onesignal.com</strong> and create a free account</li>
-                        <li>Create a new app, choose "Web Push"</li>
-                        <li>Copy your <strong>App ID</strong> and <strong>Safari Web ID</strong></li>
-                        <li>Replace <code>YOUR_ONESIGNAL_APP_ID</code> and <code>YOUR_SAFARI_WEB_ID</code> in the code</li>
-                        <li>Ensure your site is served over HTTPS</li>
-                        <li>Create a <code>manifest.json</code> file for PWA support (required for iOS)</li>
-                        <li>Upload this file to a web server</li>
-                        <li>For each iPhone user: They need to add the site to their Home Screen and allow notifications</li>
-                    </ol>
+                    <p><strong>Setup is complete! Your app is live at:</strong></p>
+                    <p><code>https://faizansabir7.github.io/IphoneTracker/</code></p>
+                    <p><strong>For each iPhone user:</strong> Visit this page on Safari and allow notifications.</p>
                 </div>
             </div>
             
@@ -445,15 +409,6 @@
                         ⚠️ Push notifications not setup. Please configure OneSignal first.
                     </div>
                     
-                    <div style="margin-bottom: 30px;">
-                        <h4 style="margin-bottom: 15px; color: #2a5298;">🔍 Search User</h4>
-                        <div class="form-group">
-                            <label for="search-user">Search by Name or iPhone:</label>
-                            <input type="text" id="search-user" placeholder="Enter name or iPhone (e.g., iPhone 1)" oninput="searchUsers()">
-                        </div>
-                        <div id="search-results" class="status-grid"></div>
-                    </div>
-                    
                     <h3 style="margin-bottom: 20px; color: #2a5298;">📊 Current iPhone Status</h3>
                     <div id="status-grid" class="status-grid"></div>
                     
@@ -464,8 +419,19 @@
                             <label for="target-selection">Send to:</label>
                             <select id="target-selection" onchange="updateTargetOptions()">
                                 <option value="all">All iPhone users</option>
-                                <option value="specific">Specific iPhone users</option>
+                                <option value="specific">Specific iPhone</option>
                                 <option value="tags">iPhone by number</option>
+                            </select>
+                        </div>
+                        
+                        <div id="specific-phone-selection" style="display: none;">
+                            <label>Select iPhone:</label>
+                            <select id="specific-phone">
+                                <option value="">Choose iPhone...</option>
+                                <option value="iPhone 1">iPhone 1</option>
+                                <option value="iPhone 2">iPhone 2</option>
+                                <option value="iPhone 3">iPhone 3</option>
+                                <option value="iPhone 4">iPhone 4</option>
                             </select>
                         </div>
                         
@@ -520,8 +486,8 @@
                     <h4>🔔 Enable Notifications</h4>
                     <p>To receive notifications when admin asks who's using the iPhone:</p>
                     <ol class="install-steps">
-                        <li>Add this site to your Home Screen (tap Share > Add to Home Screen)</li>
                         <li>Allow notifications when prompted by Safari</li>
+                        <li>Add this page to your home screen for best experience</li>
                         <li>Keep this tab open in background (recommended)</li>
                     </ol>
                 </div>
@@ -570,14 +536,14 @@
 
     <script>
         // App configuration
-        const ADMIN_PASSWORD = 'admin123'; // Change this password
+        const ADMIN_PASSWORD = 'admin123'; // Change this to a secure password
         let currentMode = 'admin';
         let isAdminLoggedIn = false;
         let users = JSON.parse(localStorage.getItem('phoneUsers') || '{}');
         let pendingRequests = JSON.parse(localStorage.getItem('pendingRequests') || '{}');
         let selectedTags = [];
         let isOneSignalReady = false;
-
+        
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
             initializeOneSignal();
@@ -585,42 +551,42 @@
             checkForPendingRequests();
             updatePreview();
             setInterval(checkForPendingRequests, 5000);
-
+            
             // Auto-update preview when typing
             document.getElementById('notification-title').addEventListener('input', updatePreview);
             document.getElementById('notification-message').addEventListener('input', updatePreview);
         });
-
+        
         function initializeOneSignal() {
-            OneSignalDeferred.push(function(OneSignal) {
+            OneSignal.push(function() {
                 OneSignal.isPushNotificationsEnabled(function(isEnabled) {
                     if (isEnabled) {
                         updateSubscriptionStatus(true);
+                        // Tag admin for notifications
+                        if (currentMode === 'admin') {
+                            OneSignal.sendTag('admin', 'true');
+                        }
                     }
                 });
-
+                
                 OneSignal.on('subscriptionChange', function(isSubscribed) {
                     updateSubscriptionStatus(isSubscribed);
                 });
-
-                OneSignal.on('notificationDisplay', function(event) {
-                    showNotification('user', `🔔 Notification received: ${event.heading}`, 'info');
+                
+                OneSignal.on('notificationDisplay', function(notification) {
+                    console.log('Notification displayed:', notification);
                 });
-
-                OneSignal.on('notificationClick', function(event) {
-                    window.location.hash = '#user-section';
-                    checkForPendingRequests();
-                });
-
+                
                 isOneSignalReady = true;
+                console.log('OneSignal initialized for hosted site');
             });
         }
-
+        
         function updateSubscriptionStatus(isSubscribed) {
             const adminStatus = document.getElementById('subscription-info');
             const userStatus = document.getElementById('user-subscription-status');
             const subscribeBtn = document.getElementById('subscribe-btn');
-
+            
             if (isSubscribed) {
                 if (adminStatus) {
                     adminStatus.className = 'subscription-status subscribed';
@@ -649,25 +615,25 @@
                 }
             }
         }
-
+        
         function switchMode(mode) {
             currentMode = mode;
-
+            
             document.querySelectorAll('.mode-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             event.target.classList.add('active');
-
+            
             document.querySelectorAll('.section').forEach(section => {
                 section.classList.remove('active');
             });
             document.getElementById(mode + '-section').classList.add('active');
-
+            
             if (mode === 'user') {
                 checkForPendingRequests();
             }
         }
-
+        
         function loginAdmin() {
             const password = document.getElementById('admin-password').value;
             if (password === ADMIN_PASSWORD) {
@@ -676,30 +642,36 @@
                 document.getElementById('admin-password').value = '';
                 updateAdminPanel();
                 showNotification('admin', '✅ Successfully logged in as admin!', 'success');
+                // Tag as admin for notifications
+                if (isOneSignalReady) {
+                    OneSignal.push(function() {
+                        OneSignal.sendTag('admin', 'true');
+                    });
+                }
             } else {
                 showNotification('admin', '❌ Incorrect password!', 'warning');
             }
         }
-
+        
         function updateAdminPanel() {
             if (!isAdminLoggedIn) return;
-
+            
             const statusGrid = document.getElementById('status-grid');
             statusGrid.innerHTML = '';
-
+            
             const phones = ['iPhone 1', 'iPhone 2', 'iPhone 3', 'iPhone 4'];
-
+            
             phones.forEach(phone => {
                 const phoneDiv = document.createElement('div');
                 const user = users[phone];
                 const hasPending = pendingRequests[phone];
-
+                
                 phoneDiv.className = 'phone-status';
                 if (user) phoneDiv.classList.add('has-user');
                 if (hasPending) phoneDiv.classList.add('pending');
-
+                
                 let statusHtml = `<div class="phone-number">${phone}</div>`;
-
+                
                 if (user) {
                     statusHtml += `
                         <div class="user-info">
@@ -710,31 +682,29 @@
                 } else {
                     statusHtml += `<div class="user-info">No one checked in</div>`;
                 }
-
+                
                 if (hasPending) {
                     statusHtml += `<div style="color: #ff9800; font-weight: 600; margin-top: 10px;">⏳ Notification sent...</div>`;
                 }
-
+                
                 phoneDiv.innerHTML = statusHtml;
                 statusGrid.appendChild(phoneDiv);
             });
         }
-
+        
         function updateTargetOptions() {
             const selection = document.getElementById('target-selection').value;
             const tagSelection = document.getElementById('tag-selection');
-
-            if (selection === 'tags') {
-                tagSelection.style.display = 'block';
-            } else {
-                tagSelection.style.display = 'none';
-            }
+            const specificPhoneSelection = document.getElementById('specific-phone-selection');
+            
+            tagSelection.style.display = selection === 'tags' ? 'block' : 'none';
+            specificPhoneSelection.style.display = selection === 'specific' ? 'block' : 'none';
         }
-
+        
         function toggleTag(tag) {
             const tagElement = event.target;
             const index = selectedTags.indexOf(tag);
-
+            
             if (index > -1) {
                 selectedTags.splice(index, 1);
                 tagElement.classList.remove('selected');
@@ -743,67 +713,79 @@
                 tagElement.classList.add('selected');
             }
         }
-
+        
         function updatePreview() {
             const title = document.getElementById('notification-title').value || 'Notification Title';
             const message = document.getElementById('notification-message').value || 'Notification message';
-
+            
             document.getElementById('preview-title').textContent = title;
             document.getElementById('preview-message').textContent = message;
         }
-
-        function sendPushNotification(phone = null) {
+        
+        function sendPushNotification() {
             if (!isOneSignalReady) {
                 showNotification('admin', '❌ OneSignal not ready. Please configure it first.', 'error');
                 return;
             }
-
-            const title = document.getElementById('notification-title').value || '📱 iPhone Action Required';
-            const message = document.getElementById('notification-message').value || 'Please open the app to check in.';
-            const targetType = phone ? 'tags' : document.getElementById('target-selection').value;
-
+            
+            const title = document.getElementById('notification-title').value;
+            const message = document.getElementById('notification-message').value;
+            const targetType = document.getElementById('target-selection').value;
+            const selectedPhone = document.getElementById('specific-phone')?.value;
+            
             if (!title || !message) {
                 showNotification('admin', '❌ Please enter both title and message', 'warning');
                 return;
             }
-
+            
+            if (targetType === 'specific' && !selectedPhone) {
+                showNotification('admin', '❌ Please select an iPhone', 'warning');
+                return;
+            }
+            
             let notificationData = {
+                app_id: "YOUR_ONESIGNAL_APP_ID", // Ensure this matches your App ID
                 headings: { 'en': title },
                 contents: { 'en': message },
-                url: `${window.location.href}#user-section`,
-                app_url: `${window.location.href}#user-section`,
-                ios_attachments: {
-                    id1: 'https://onesignal.com/images/notification_logo.png'
-                }
+                url: "https://faizansabir7.github.io/IphoneTracker/" // Updated to match subdirectory
             };
-
+            
+            // Configure targeting
             if (targetType === 'all') {
                 notificationData.included_segments = ['All'];
             } else if (targetType === 'tags' && selectedTags.length > 0) {
                 notificationData.filters = selectedTags.map(tag => ({
-                    field: 'tag',
+                    field: "tag",
                     key: tag,
-                    relation: '=',
-                    value: 'true'
+                    relation: "=",
+                    value: "true"
                 }));
-            } else if (phone) {
-                const tag = phone.toLowerCase().replace(' ', '');
+            } else if (targetType === 'specific' && selectedPhone) {
+                const tag = selectedPhone.toLowerCase().replace(' ', '');
                 notificationData.filters = [{
-                    field: 'tag',
+                    field: "tag",
                     key: tag,
-                    relation: '=',
-                    value: 'true'
+                    relation: "=",
+                    value: "true"
                 }];
             }
 
-            OneSignalDeferred.push(function(OneSignal) {
-                OneSignal.createNotification(notificationData).then(response => {
-                    showNotification('admin', `✅ Notification sent to ${phone || 'selected users'}!`, 'success');
-
-                    if (phone || targetType === 'tags') {
-                        const phonesToTrack = phone ? [phone] : selectedTags.map(tag => tag.replace('iphone', 'iPhone '));
-                        phonesToTrack.forEach(p => {
-                            pendingRequests[p] = {
+            OneSignal.push(function() {
+                OneSignal.createNotification(notificationData).then(() => {
+                    showNotification('admin', '✅ Push notification sent!', 'success');
+                    
+                    // Store pending request for tracking
+                    if (targetType === 'specific' && selectedPhone) {
+                        pendingRequests[selectedPhone] = {
+                            timestamp: Date.now(),
+                            message: message
+                        };
+                        localStorage.setItem('pendingRequests', JSON.stringify(pendingRequests));
+                        updateAdminPanel();
+                    } else if (targetType === 'tags' && selectedTags.length > 0) {
+                        selectedTags.forEach(tag => {
+                            const phoneNumber = tag.replace('iphone', 'iPhone ');
+                            pendingRequests[phoneNumber] = {
                                 timestamp: Date.now(),
                                 message: message
                             };
@@ -811,19 +793,13 @@
                         localStorage.setItem('pendingRequests', JSON.stringify(pendingRequests));
                         updateAdminPanel();
                     }
-                }).catch(error => {
-                    showNotification('admin', `❌ Failed to send notification: ${error.message}`, 'error');
+                }).catch(err => {
+                    console.error('Notification error:', err);
+                    showNotification('admin', `❌ Failed to send notification: ${err.message}`, 'error');
                 });
             });
         }
-
-        function sendPageOpenNotification(phone) {
-            document.getElementById('notification-title').value = '📱 Action Required';
-            document.getElementById('notification-message').value = `Please open the iPhone Tracker app to check in for ${phone}.`;
-            updatePreview();
-            sendPushNotification(phone);
-        }
-
+        
         function askAllUsers() {
             document.getElementById('notification-title').value = '📱 iPhone Check-in Required';
             document.getElementById('notification-message').value = 'Please check in with your name and which iPhone you are currently using. This helps us track device usage.';
@@ -832,25 +808,35 @@
             updatePreview();
             sendPushNotification();
         }
-
+        
         function testNotification() {
-            OneSignalDeferred.push(function(OneSignal) {
-                OneSignal.sendSelfNotification(
-                    'Test Notification',
-                    'This is a test notification to verify push notifications are working.',
-                    window.location.href
-                );
-                showNotification('admin', '✅ Test notification sent!', 'info');
+            if (!isOneSignalReady) {
+                showNotification('admin', '❌ OneSignal not ready. Please configure it first.', 'error');
+                return;
+            }
+            
+            OneSignal.push(function() {
+                OneSignal.createNotification({
+                    app_id: "YOUR_ONESIGNAL_APP_ID", // Ensure this matches your App ID
+                    headings: { 'en': 'Test Notification' },
+                    contents: { 'en': 'This is a test notification to verify push notifications are working.' },
+                    url: "https://faizansabir7.github.io/IphoneTracker/" // Updated to match subdirectory
+                }).then(() => {
+                    showNotification('admin', '✅ Test notification sent!', 'info');
+                }).catch(err => {
+                    console.error('Test notification error:', err);
+                    showNotification('admin', `❌ Failed to send test notification: ${err.message}`, 'error');
+                });
             });
         }
-
+        
         function checkSubscribers() {
             if (!isOneSignalReady) {
                 showNotification('admin', '❌ OneSignal not ready', 'error');
                 return;
             }
-
-            OneSignalDeferred.push(function(OneSignal) {
+            
+            OneSignal.push(function() {
                 OneSignal.getTags(function(tags) {
                     let subscriberInfo = 'Current subscriber tags:\n';
                     if (Object.keys(tags).length === 0) {
@@ -864,158 +850,188 @@
                 });
             });
         }
-
-        function searchUsers() {
-            const searchInput = document.getElementById('search-user').value.toLowerCase();
-            const searchResults = document.getElementById('search-results');
-            searchResults.innerHTML = '';
-
-            const phones = Object.keys(users).filter(phone => 
-                phone.toLowerCase().includes(searchInput) || 
-                (users[phone].name && users[phone].name.toLowerCase().includes(searchInput))
-            );
-
-            if (phones.length === 0) {
-                searchResults.innerHTML = '<div class="notification warning">No matching users or iPhones found.</div>';
-                return;
-            }
-
-            phones.forEach(phone => {
-                const resultDiv = document.createElement('div');
-                resultDiv.className = 'phone-status';
-                resultDiv.innerHTML = `
-                    <div class="phone-number">${phone}</div>
-                    <div class="user-info">
-                        <span class="user-name">${users[phone].name || 'No user'}</span>
-                        <div class="timestamp">Since: ${users[phone].timestamp ? new Date(users[phone].timestamp).toLocaleString() : 'N/A'}</div>
-                    </div>
-                    <button class="btn" style="margin-top: 10px; background: #2196f3;" onclick="sendPageOpenNotification('${phone}')">📲 Send Page Open Notification</button>
-                `;
-                searchResults.appendChild(resultDiv);
-            });
-        }
-
+        
         function subscribeToNotifications() {
             if (!isOneSignalReady) {
                 showNotification('user', '❌ OneSignal not ready. Please check setup.', 'error');
                 return;
             }
-
-            OneSignalDeferred.push(function(OneSignal) {
-                OneSignal.showSlidedownPrompt();
+            
+            OneSignal.push(function() {
+                OneSignal.showSlidedownPrompt().then(() => {
+                    OneSignal.isPushNotificationsEnabled(function(isEnabled) {
+                        if (isEnabled) {
+                            updateSubscriptionStatus(true);
+                            const phoneNumber = document.getElementById('user-phone-number').value;
+                            if (phoneNumber) updateUserTag();
+                        }
+                    });
+                }).catch(err => {
+                    console.error('Subscription prompt error:', err);
+                    showNotification('user', `❌ Failed to show subscription prompt: ${err.message}`, 'error');
+                });
             });
         }
-
+        
         function updateUserTag() {
             const phoneNumber = document.getElementById('user-phone-number').value;
-            if (!phoneNumber || !isOneSignalReady) return;
-
+            if (!phoneNumber || !isOneSignalReady) {
+                showNotification('user', '❌ Please select an iPhone first!', 'warning');
+                return;
+            }
+            
             const tag = phoneNumber.toLowerCase().replace(' ', '');
-
-            OneSignalDeferred.push(function(OneSignal) {
-                OneSignal.sendTag(tag, "true");
-                showNotification('user', `✅ You're now subscribed to ${phoneNumber} notifications`, 'success');
+            
+            OneSignal.push(function() {
+                OneSignal.sendTag(tag, "true").then(() => {
+                    showNotification('user', `✅ You're now subscribed to ${phoneNumber} notifications`, 'success');
+                }).catch(err => {
+                    console.error('Tag error:', err);
+                    showNotification('user', `❌ Failed to set tag: ${err.message}`, 'error');
+                });
             });
         }
-
-        function checkinUser(phone = null) {
-            const phoneNumber = phone || document.getElementById('user-phone-number').value;
+        
+        function checkinUser() {
+            const phoneNumber = document.getElementById('user-phone-number').value;
             const userName = document.getElementById('user-name-input').value.trim();
-
+            
             if (!phoneNumber) {
                 showNotification('user', '❌ Please select an iPhone!', 'warning');
                 return;
             }
-
+            
             if (!userName) {
                 showNotification('user', '❌ Please enter your name!', 'warning');
                 return;
             }
-
+            
             users[phoneNumber] = {
                 name: userName,
                 timestamp: Date.now()
             };
-
+            
             delete pendingRequests[phoneNumber];
-
+            
             localStorage.setItem('phoneUsers', JSON.stringify(users));
             localStorage.setItem('pendingRequests', JSON.stringify(pendingRequests));
-
+            
             updateUserTag();
             showNotification('user', `✅ Successfully checked in to ${phoneNumber}!`, 'success');
             document.getElementById('user-name-input').value = '';
-            document.getElementById('user-phone-number').value = '';
             checkForPendingRequests();
             updateAdminPanel();
+            
+            // Notify admin of check-in
+            if (isOneSignalReady) {
+                OneSignal.push(function() {
+                    OneSignal.createNotification({
+                        app_id: "YOUR_ONESIGNAL_APP_ID", // Ensure this matches your App ID
+                        headings: { 'en': 'User Check-in' },
+                        contents: { 'en': `${userName} has checked in to ${phoneNumber}.` },
+                        url: "https://faizansabir7.github.io/IphoneTracker/", // Updated to match subdirectory
+                        filters: [{ field: "tag", key: "admin", relation: "=", value: "true" }]
+                    }).catch(err => {
+                        console.error('Admin notification error:', err);
+                    });
+                });
+            }
         }
-
+        
         function checkoutUser() {
             const phoneNumber = document.getElementById('user-phone-number').value;
+            
             if (!phoneNumber) {
                 showNotification('user', '❌ Please select an iPhone!', 'warning');
                 return;
             }
-
+            
+            const userName = users[phoneNumber] ? users[phoneNumber].name : 'User';
             delete users[phoneNumber];
             delete pendingRequests[phoneNumber];
-
+            
             localStorage.setItem('phoneUsers', JSON.stringify(users));
             localStorage.setItem('pendingRequests', JSON.stringify(pendingRequests));
-
-            OneSignalDeferred.push(function(OneSignal) {
-                OneSignal.deleteTag(phoneNumber.toLowerCase().replace(' ', ''));
-            });
-
+            
+            const tag = phoneNumber.toLowerCase().replace(' ', '');
+            if (isOneSignalReady) {
+                OneSignal.push(function() {
+                    OneSignal.deleteTag(tag);
+                });
+            }
+            
             showNotification('user', `✅ Successfully checked out from ${phoneNumber}!`, 'success');
             document.getElementById('user-name-input').value = '';
             document.getElementById('user-phone-number').value = '';
             checkForPendingRequests();
             updateAdminPanel();
+            
+            // Notify admin of check-out
+            if (isOneSignalReady) {
+                OneSignal.push(function() {
+                    OneSignal.createNotification({
+                        app_id: "YOUR_ONESIGNAL_APP_ID", // Ensure this matches your App ID
+                        headings: { 'en': 'User Check-out' },
+                        contents: { 'en': `${userName} has checked out from ${phoneNumber}.` },
+                        url: "https://faizansabir7.github.io/IphoneTracker/", // Updated to match subdirectory
+                        filters: [{ field: "tag", key: "admin", relation: "=", value: "true" }]
+                    }).catch(err => {
+                        console.error('Admin notification error:', err);
+                    });
+                });
+            }
         }
-
-        function checkForPendingRequests() {
-            const pendingRequestsDiv = document.getElementById('pending-requests');
-            pendingRequestsDiv.innerHTML = '';
-
-            Object.keys(pendingRequests).forEach(phone => {
-                const request = pendingRequests[phone];
-                const requestDiv = document.createElement('div');
-                requestDiv.className = 'pending-request';
-                requestDiv.innerHTML = `
-                    <h3>📱 Request for ${phone}</h3>
-                    <p>${request.message}</p>
-                    <button class="btn" style="background: #4caf50;" onclick="checkinUser('${phone}')">✅ Respond to Request</button>
-                `;
-                pendingRequestsDiv.appendChild(requestDiv);
-            });
-        }
-
+        
         function clearAllData() {
-            if (confirm('Are you sure you want to clear all data? This will remove all user check-ins and pending requests.')) {
+            if (!isAdminLoggedIn) {
+                showNotification('admin', '❌ Please log in as admin first!', 'error');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to clear all user data and pending requests?')) {
                 users = {};
                 pendingRequests = {};
-                localStorage.setItem('phoneUsers', JSON.stringify(users));
-                localStorage.setItem('pendingRequests', JSON.stringify(pendingRequests));
+                localStorage.removeItem('phoneUsers');
+                localStorage.removeItem('pendingRequests');
                 updateAdminPanel();
                 checkForPendingRequests();
                 showNotification('admin', '✅ All data cleared!', 'success');
             }
         }
-
+        
         function showNotification(section, message, type) {
-            const notificationContainer = section === 'admin' ? document.getElementById('admin-panel') : document.getElementById('user-notifications');
+            const notificationContainer = section === 'admin' 
+                ? document.getElementById('admin-panel') 
+                : document.getElementById('user-notifications');
+            
             if (!notificationContainer) return;
-
+            
             const notification = document.createElement('div');
             notification.className = `notification ${type}`;
             notification.textContent = message;
+            
             notificationContainer.insertBefore(notification, notificationContainer.firstChild);
-
+            
             setTimeout(() => {
-                notification.style.opacity = '0';
-                setTimeout(() => notification.remove(), 500);
+                notification.remove();
             }, 5000);
+        }
+        
+        function checkForPendingRequests() {
+            const pendingContainer = document.getElementById('pending-requests');
+            pendingContainer.innerHTML = '';
+            
+            for (let phone in pendingRequests) {
+                const request = pendingRequests[phone];
+                const requestDiv = document.createElement('div');
+                requestDiv.className = 'pending-request';
+                requestDiv.innerHTML = `
+                    <h3>Pending Request for ${phone}</h3>
+                    <p>${request.message}</p>
+                    <p class="timestamp">Sent: ${new Date(request.timestamp).toLocaleString()}</p>
+                `;
+                pendingContainer.appendChild(requestDiv);
+            }
         }
     </script>
 </body>
